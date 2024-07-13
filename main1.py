@@ -1,6 +1,8 @@
+import math
 import time
 import tkinter as tk
 from tkinter import messagebox
+import random
 
 # Define the dimensions of the grid and the cell size
 GRID_ROWS = 15
@@ -22,7 +24,7 @@ canvas.pack()
 # Store the grid cells
 cells = {}
 
-# Draw the grid with activefill
+# Draw the grid with activefill( color when mouse hovers)
 def draw_grid():
     for row in range(GRID_ROWS):
         for col in range(GRID_COLS):
@@ -142,32 +144,48 @@ def nextState():
 
     drawCanvas(updatedStateDict)
 
+    return updatedStateDict
+
+def autoRun():
+    currentState = nextState()
+    def run_step():
+        if checkEmptyCanvas():
+            return
+        nonlocal currentState
+        next_state = nextState()
+        if next_state == currentState:
+            messagebox.showwarning('Final Game State', 'Please select new cells..')
+            return
+        currentState = next_state
+        root.after(500, run_step)
+    run_step()
+
+def getRandom():
+    rand_int = random.getrandbits(15)
+    rand_str = f'{rand_int:015b}'
+    print(rand_str)
+    return rand_str
+
+def randomGameState():
+    randomDict = {}
+    for col in range(GRID_COLS):
+        randStr = getRandom()
+        print(col)
+        for row in range(GRID_ROWS):
+            print(row, randStr[row])
+            randomDict[(row, col)] = int(randStr[row])
+    # print(randomDict)
+
+    drawCanvas(randomDict)
+
 def startGame():
-    cordsList = cells.keys()
-    checkEmptyCanvas()
-
-    neighbouringDict = {}
-    for key in cordsList:
-        neighbouringDict[key] = getNeighbours(key)
-
-    # print(neighbouringDict)
-
-    stateCount = {}
-    for key in cordsList:
-        stateCount[key] = getState(key, neighbouringDict[key])
-
-    # print("State: \n", stateCount)
-
-    updatedStateDict = {}
-    updatedStateDict = updateState(stateCount)
-
-    drawCanvas(updatedStateDict)
+    if checkEmptyCanvas():
+        return
 
     if var.get() == 1:
-        # while True:
+        autoRun()
+    else:
         nextState()
-        time.sleep(0.5)
-
 
 def clearAll():
     for key in cells.keys():
@@ -185,8 +203,11 @@ button_frame.pack()
 myButton = tk.Button(button_frame, text="Next", command=startGame)
 myButton.pack(side="left", padx=10, pady=10)
 
-myButton = tk.Button(button_frame, text="Reset", command=clearAll)
-myButton.pack(side="left", padx=10, pady=10)
+myButton1 = tk.Button(button_frame, text="Reset", command=clearAll)
+myButton1.pack(side="left", padx=10, pady=10)
+
+myButton2 = tk.Button(button_frame, text="Random", command=randomGameState)
+myButton2.pack(side="left", padx=10, pady=10)
 
 var = tk.IntVar()
 tk.Checkbutton(button_frame, text="Autorun", variable=var, onvalue=1, offvalue=0,
